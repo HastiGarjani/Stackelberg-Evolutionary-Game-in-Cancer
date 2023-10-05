@@ -8,7 +8,7 @@ K_max = 10000
 r_max = 0.45
 T = 0.7*K_max
 d = 0.01
-g = 0.8
+g = 1
 sigma = 1
 theta = 0.1
 k = 2
@@ -16,12 +16,14 @@ b = 10
 m_eff = 0.5
 # Competition coefficients
 aRS = 0.9
-aSR = 0.1
+aSR = 0.15
 # Quality of life coefficients
-a1 = 0.54
-a2 = 0.21
+# a1 = 0.54
+# a2 = 0
+# a3 = 0.25
+a1 = 0.5
+a2 = 0.25
 a3 = 0.25
-
 #Initialization
 m = np.linspace(0,1,1001)
 
