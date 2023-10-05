@@ -1,5 +1,5 @@
 ################################################################
-#############              Figure 3               ##############
+#############              Figure A1              ##############
 # Leader and Follower Best responses
 # Quality of life level curves
 # Stabilization region
@@ -18,40 +18,58 @@ pylab.rcParams['figure.figsize'] = (11.25, 5.0)
 K_max = 10000
 r_max = 0.45
 d = 0.01
-g = 0.8
+g = 1
 sigma  = 1
 k = 2
 b = 10
 # Competition coefficients
 aRS = 0.9
-aSR = 0.1
+aSR = 0.15
 # Quality of life coefficients
-a1 = 0.54
-a2 = 0.21
+# a1 = 0.54
+# a2 = 0.21
+# a3 = 0.25
+a1 = 0.5
+a2 = 0.25
 a3 = 0.25
-
 # Initialization
 m = np.linspace(0,1,201)
 u = np.linspace(0,1,201)
 x_S_hist = []
 x_R_hist = []
 Q_hist = []
+x_sum_hist = []
+
 ####### Meshgrid to specify stabilization region and level curve value ########
 for mm in m:
     x_S = []
     x_R = []
     Q = []
+    x_sum = []
+
     for uu in u:
-        x_R_temp = max(0,(K_max/(r_max*(1-aSR*aRS)))*(aSR*mm*np.exp(g*uu)/(k+b*uu)\
+        x_R_temp = max(-0.0001,(K_max/(r_max*(1-aSR*aRS)))*(aSR*mm*np.exp(g*uu)/(k+b*uu)\
              - mm/k + aSR*d*np.exp(g*uu) + r_max -d - aSR*r_max))
-        x_S_temp = max(0,(K_max/(r_max*(1-aSR*aRS)))*(-mm*np.exp(g*uu)/(k+b*uu) \
+        x_S_temp = max(-0.0001,(K_max/(r_max*(1-aSR*aRS)))*(-mm*np.exp(g*uu)/(k+b*uu) \
             + aRS*mm/k - d*np.exp(g*uu) + r_max - aRS*r_max + aRS*d))
+        if ((x_S_temp<0) & (x_R_temp<0)):
+            x_temp = -0.1
+            x_S_temp = 0
+            x_R_temp = 0
+        else:
+            x_temp = max(0,x_S_temp) + max(0,x_R_temp)
+            x_S_temp = max(0,x_S_temp)
+            x_R_temp = max(0,x_R_temp)
         Q_temp = 1 - a1*(((x_R_temp+x_S_temp)/K_max)**2) - a2*(uu**2) - a3*(mm**2)
         x_S.append(x_S_temp)
         x_R.append(x_R_temp)
         Q.append(Q_temp)
+        x_sum.append(x_temp)
+
     x_S_hist.append(x_S)
     x_R_hist.append(x_R)
+    x_sum_hist.append(x_sum)
+
     Q_hist.append(Q)
 
 Y1, Y2 = np.meshgrid(m,u)
@@ -70,12 +88,13 @@ ax2.set_xlim((0,1))
 im = ax2.pcolormesh(Y1, Y2, np.transpose(z), cmap=cmap, norm=norm, shading='nearest')
 fig.colorbar(im, ax=ax2, format='%.2f')
 # Stabilization region
-z2 = np.add(x_R_hist,x_S_hist)
-levels2 = FixedLocator([z2.min(), 0, 7000, z2.max()], nbins=4).tick_values(z2.min(), z2.max())
-colorsList2 = ['green', 'none', 'white']
+min_z_sep1 = np.min(x_sum_hist)
+max_z_sep1 = np.max(x_sum_hist)
+levels2 = FixedLocator([min_z_sep1, 0, 7000, max_z_sep1]).tick_values(min_z_sep1, max_z_sep1)
+colorsList2 = ['white', 'none', 'white']
 cmap2 = matplotlib.colors.ListedColormap(colorsList2)
 norm2 = BoundaryNorm(levels2, ncolors=cmap2.N, clip=True)
-im = ax2.pcolormesh(Y1, Y2, np.transpose(z2), cmap=cmap2, norm=norm2, shading='nearest')
+im = ax2.pcolormesh(Y1, Y2, np.transpose(x_sum_hist), cmap=cmap2, norm=norm2, shading='nearest')
 
 
 # Best response curve of the leader
@@ -92,9 +111,10 @@ mm1 = np.linspace(0,1,1001)
 u_Stack_temp = -k/b - mm1/(2*b*d) + np.sqrt((mm1 * g)**2 + 4*mm1*g*b*d)/(2*b*d*g)
 ax2.plot(mm1,u_Stack_temp,color='b',label="Follower's Best Response", linewidth=3)
 
-# Stackelberg solution (mS_idx)
-# mS_idx=mS_idx is calculated in Q_Stack file
-mS_idx = 660
+# Stackelberg solution (mS)
+# mS_idx = 731 is calculated in Q_Stack file
+# mS_idx = 705
+mS_idx = 686
 u_st = u_Stack_temp[mS_idx]
 x_S_st = (K_max/(r_max*(1-aSR*aRS)))*(aSR*mm1[mS_idx]*np.exp(g*u_st)/(k+b*u_st) - mm1[mS_idx]/k \
     + aSR*d*np.exp(g*u_st) + r_max - d - aSR*r_max)
@@ -106,18 +126,30 @@ Q_S = 1 - a1*(((x_R_st+x_S_st)/K_max)**2)- a2*(u_st**2) - a3*(mm1[mS_idx]**2)
 ax2.scatter(mm1[mS_idx],u_Stack_temp[mS_idx],color='b', s=50)
 ax2.text(mm1[mS_idx]-0.18,u_Stack_temp[mS_idx]+0.05,'Stackelberg',backgroundcolor='1')
 
-# Nash solution (mN_idx)
+# Nash solution (mN)
 # Nash solution is calculated at the intersection 
 ## of Leader and follower best response curves
-mN_idx = 749
+# mN_idx = 762
+mN_idx = 737
 u_N = u_Stack_temp[mN_idx]
-x_S_N = (K_max/(r_max*(1-aSR*aRS)))*(aSR*mm1[mN_idx]*np.exp(g*u_N)/(k+b*u_N) - mm1[mN_idx]/k \
-    + aSR*d*np.exp(g*u_N) + r_max - d - aSR*r_max)
-x_R_N = (K_max/(r_max*(1-aSR*aRS)))*(-mm1[mN_idx]*np.exp(g*u_N)/(k+b*u_N) + aRS*mm1[mN_idx]/k \
-    - d*np.exp(g*u_N) + r_max - aRS*r_max + aRS*d)
+x_S_N = (K_max/(r_max*(1-aSR*aRS)))*(aSR*mm1[mN_idx]*np.exp(g*u_N)/(k+b*u_N)\
+     - mm1[mN_idx]/k + aSR*d*np.exp(g*u_N) + r_max - d - aSR*r_max)
+x_R_N = (K_max/(r_max*(1-aSR*aRS)))*(-mm1[mN_idx]*np.exp(g*u_N)/(k+b*u_N)\
+     + aRS*mm1[mN_idx]/k - d*np.exp(g*u_N) + r_max - aRS*r_max + aRS*d)
 
 # Quality of life at Nash solution
 Q_N = 1 - a1*(((x_S_N+x_R_N)/K_max)**2)- a2*u_N**2 - a3*mm1[mN_idx]**2
+
+# MAximum tolerable dose solution (mMTD)
+# Here maximum tolerable dose is 1
+mMTD_idx = 1000
+u_MTD = u_Stack_temp[mMTD_idx]
+x_S_MTD = (K_max/(r_max*(1-aSR*aRS)))*(aSR*mm1[mMTD_idx]*np.exp(g*u_MTD)/(k+b*u_MTD)\
+     - mm1[mMTD_idx]/k + aSR*d*np.exp(g*u_MTD) + r_max - d - aSR*r_max)
+x_R_MTD = (K_max/(r_max*(1-aSR*aRS)))*(-mm1[mMTD_idx]*np.exp(g*u_MTD)/(k+b*u_MTD)\
+     + aRS*mm1[mMTD_idx]/k - d*np.exp(g*u_MTD) + r_max - aRS*r_max + aRS*d)
+# Quality of life at MTD solution
+Q_MTD = 1 - a1*(((x_S_MTD+x_R_MTD)/K_max)**2)- a2*u_MTD**2 - a3*mm1[mMTD_idx]**2
 
 # Illustrating MTD, Stackleberg, and Nash solutions
 # MTD means Maximum tolerable dose which is 1 and happens at index 1000
@@ -133,11 +165,11 @@ ax1.set_ylabel('Resistance rate', size = 10)
 ax1.set_ylim((0,1))
 ax1.set_xlim((0,1))
 z = np.add(x_R_hist,x_S_hist)
-levels = FixedLocator([z.min(), 0, 7000, z.max()], nbins=4).tick_values(z.min(), z.max())
+levels = FixedLocator([min_z_sep1, 0, 7000, max_z_sep1]).tick_values(min_z_sep1, max_z_sep1)
 colorsList = ['green', 'yellow', 'red']
 cmap = matplotlib.colors.ListedColormap(colorsList)
 norm = BoundaryNorm(levels, ncolors=cmap.N, clip=True)
-im = ax1.pcolormesh(Y1, Y2, np.transpose(z), cmap=cmap, norm=norm, shading='nearest')
+im = ax1.pcolormesh(Y1, Y2, np.transpose(x_sum_hist), cmap=cmap, norm=norm, shading='nearest')
 
 # Leader and follower best response curves
 ax1.plot(m,u,'b--',label="Leader's Best Response", linewidth=3)
@@ -151,12 +183,14 @@ ax1.scatter(mm1[mN_idx],u_Stack_temp[mN_idx],color='b', s=50)
 ax1.text(mm1[mN_idx]+0.028,u_Stack_temp[mN_idx]-0.05,'Nash',backgroundcolor='1',size='small')
 ax1.text(mm1[mN_idx]+0.028,u_Stack_temp[mN_idx]-0.1,'Q='+str(round(Q_N,3)),backgroundcolor='1',size='x-small')
 ax1.scatter(mm1[mMTD_idx],u_Stack_temp[mMTD_idx],color='b', s=50)
-ax1.text(mm1[mMTD_idx]-0.09,u_Stack_temp[mMTD_idx]+0.03,'MTD',backgroundcolor='1',size='small')
+ax1.text(mm1[mMTD_idx]-0.12,u_Stack_temp[mMTD_idx]+0.08,'MTD',backgroundcolor='1',size='small')
+ax1.text(mm1[mMTD_idx]-0.12,u_Stack_temp[mMTD_idx]+0.04,'Q='+str(round(Q_MTD,3)),backgroundcolor='1',size='x-small')
+
 ax1.set_xlim([0,1.001])
 fig.legend()
 ax1.text(-0.1, 1.05, string.ascii_uppercase[0], transform=ax1.transAxes, 
             size=20, weight='normal')
 ax2.text(-0.1, 1.05, string.ascii_uppercase[1], transform=ax2.transAxes, 
             size=20, weight='normal')
-plt.savefig("subplot_sep.pdf", dpi=100)
+plt.savefig("subplot_sep_Y.pdf", dpi=100)
 plt.show()
