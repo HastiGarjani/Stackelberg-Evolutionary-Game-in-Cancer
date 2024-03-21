@@ -1,3 +1,5 @@
+#####################################################
+################## Local stability ##################
 import numpy as np
 import matplotlib.pyplot as plt
 K_max = 10000
