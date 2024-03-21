@@ -108,6 +108,7 @@ m = (a1*kk*((aSR-1)/((k+b*u)*r_u)+(aRS-1)/(k*r_max))*\
 # Illustrating best response curves
 ax2.plot(m,u,'b--',linewidth=3)
 mm1 = np.linspace(0,1,1001)
+# Best response curve of the follower
 u_Stack_temp = -k/b - mm1/(2*b*d) + np.sqrt((mm1 * g)**2 + 4*mm1*g*b*d)/(2*b*d*g)
 ax2.plot(mm1,u_Stack_temp,color='b',label="Follower's Best Response", linewidth=3)
 
