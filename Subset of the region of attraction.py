@@ -1,3 +1,5 @@
+##################################################################
+#####################  Region of attraction  #####################
 from tkinter import Scale
 import numpy as np
 import matplotlib.pyplot as plt
