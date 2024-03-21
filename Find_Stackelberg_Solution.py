@@ -1,5 +1,5 @@
 ################################################################
-############# Code to Obtain Stackelberg Strategy ##############
+####################  Stackelberg Strategy  ####################
 
 import numpy as np
 
